@@ -68,7 +68,7 @@ export function findVariantForOrderItem(
   if (Object.keys(selections).length > 0) {
     return variants.find((v) =>
       Object.entries(selections).every(
-        ([key, val]) => mapVariantOptions(v.options as Map<string, string>)[key] === val
+        ([key, val]) => mapVariantOptions(v.options)[key] === val
       )
     );
   }

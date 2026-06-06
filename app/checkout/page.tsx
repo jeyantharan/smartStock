@@ -170,14 +170,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod === "credit_card") {
-      const { cardNumber, cardName, expiry, cvv } = cardForm;
-      if (!cardNumber || !cardName || !expiry || !cvv) {
-        toastWarning("Please fill in credit card details.");
-        return;
-      }
-    }
-
     setIsProcessing(true);
 
     const result = await placeOrder(

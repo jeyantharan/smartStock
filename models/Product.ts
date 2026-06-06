@@ -130,18 +130,18 @@ export function serializeProduct(product: IProduct) {
     category: product.category,
     description: product.description,
     images: product.images ?? [],
-    specifications: mapSpecs(product.specifications as Map<string, string>),
+    specifications: mapSpecs(product.specifications),
     variantOptions: (product.variantOptions ?? []).map((o) => ({
       name: o.name,
       values: o.values ?? [],
       displayOrder: o.displayOrder ?? 0,
-      valueImages: mapSpecs(o.valueImages as Map<string, string> | Record<string, string>),
-      valuePrices: mapNumberRecord(o.valuePrices as Map<string, number> | Record<string, number>),
+      valueImages: mapSpecs(o.valueImages ?? {}),
+      valuePrices: mapNumberRecord(o.valuePrices),
     })),
     variants: (product.variants ?? []).map((v) => ({
       id: v._id?.toString(),
       sku: v.sku,
-      options: mapOptions(v.options as Map<string, string>),
+      options: mapOptions(v.options),
       price: v.price,
       originalPrice: v.originalPrice,
       stock: v.stock,
@@ -157,7 +157,7 @@ export function serializeProduct(product: IProduct) {
     isPublished: product.isPublished !== false,
     rating: product.rating ?? 0,
     ratingCount: product.ratingCount ?? 0,
-    createdAt: product.createdAt,
-    updatedAt: product.updatedAt,
+    createdAt: product.createdAt?.toISOString(),
+    updatedAt: product.updatedAt?.toISOString(),
   };
 }
