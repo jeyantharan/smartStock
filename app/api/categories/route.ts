@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Category, { serializeCategory } from "@/models/Category";
 import { jsonError, jsonSuccess } from "@/lib/api-response";

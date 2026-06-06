@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/useToast";
 export default function HomePage() {
   const [email, setEmail] = useState("");
   const { toastSuccess, toastWarning } = useToast();
-  const { products, loading } = useProducts();
+  const { products } = useProducts();
   const { tree: categoryTree, loading: categoriesLoading } = useCategories();
   const topCategories = getTopLevelCategories(categoryTree);
 

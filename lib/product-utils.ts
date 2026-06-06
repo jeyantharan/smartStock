@@ -314,8 +314,7 @@ export function resolveDisplayImage(
 /** Resolve price to show based on current variant selections */
 export function resolveDisplayPrice(
   product: Pick<StoreProduct, "price" | "variantOptions" | "variants">,
-  selectedOptions: Record<string, string>,
-  changedOption?: string
+  selectedOptions: Record<string, string>
 ): number {
   const variants = product.variants ?? [];
   const sorted = [...(product.variantOptions ?? [])].sort(

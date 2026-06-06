@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,9 +52,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               You do not have permission to access the admin panel.
             </p>
           </div>
-          <a href="/" className="btn btn-primary w-100 rounded-pill fw-semibold">
+          <Link href="/" className="btn btn-primary w-100 rounded-pill fw-semibold">
             Back to Store
-          </a>
+          </Link>
         </div>
       </div>
     );
