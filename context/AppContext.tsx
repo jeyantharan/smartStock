@@ -225,6 +225,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedOptions?: Record<string, string>,
     variantId?: string
   ) => {
+    const alreadyInCart = cart.some(
+      (item) =>
+        item.product.id === product.id &&
+        optionsMatch(item, selectedOptions, color, size)
+    );
+
+    addToast(
+      alreadyInCart
+        ? `Updated quantity of ${product.name} in cart.`
+        : `Added ${product.name} to cart.`,
+      "success"
+    );
+
     setCart((prevCart) => {
       const existingIndex = prevCart.findIndex(
         (item) =>
@@ -233,24 +246,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
 
       if (existingIndex > -1) {
-        const newCart = [...prevCart];
-        newCart[existingIndex].quantity += quantity;
-        addToast(`Updated quantity of ${product.name} in cart.`, "success");
-        return newCart;
-      } else {
-        addToast(`Added ${product.name} to cart.`, "success");
-        return [
-          ...prevCart,
-          {
-            product,
-            quantity,
-            selectedColor: color,
-            selectedSize: size,
-            selectedOptions,
-            variantId,
-          },
-        ];
+        return prevCart.map((item, i) =>
+          i === existingIndex ? { ...item, quantity: item.quantity + quantity } : item
+        );
       }
+
+      return [
+        ...prevCart,
+        {
+          product,
+          quantity,
+          selectedColor: color,
+          selectedSize: size,
+          selectedOptions,
+          variantId,
+        },
+      ];
     });
   };
 
@@ -260,20 +271,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     size?: string,
     selectedOptions?: Record<string, string>
   ) => {
-    setCart((prevCart) => {
-      const item = prevCart.find(
-        (i) =>
-          i.product.id === productId &&
-          optionsMatch(i, selectedOptions, color, size)
-      );
-      if (item) {
-        addToast(`Removed ${item.product.name} from cart.`, "info");
-      }
-      return prevCart.filter(
+    const item = cart.find(
+      (i) =>
+        i.product.id === productId &&
+        optionsMatch(i, selectedOptions, color, size)
+    );
+    if (item) {
+      addToast(`Removed ${item.product.name} from cart.`, "info");
+    }
+    setCart((prevCart) =>
+      prevCart.filter(
         (i) =>
           !(i.product.id === productId && optionsMatch(i, selectedOptions, color, size))
-      );
-    });
+      )
+    );
   };
 
   const updateCartQuantity = (
@@ -301,15 +312,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleWishlist = (productId: string) => {
-    setWishlist((prevWishlist) => {
-      if (prevWishlist.includes(productId)) {
-        addToast("Removed item from wishlist.", "info");
-        return prevWishlist.filter((id) => id !== productId);
-      } else {
-        addToast("Added item to wishlist.", "success");
-        return [...prevWishlist, productId];
-      }
-    });
+    const alreadyWishlisted = wishlist.includes(productId);
+    addToast(
+      alreadyWishlisted ? "Removed item from wishlist." : "Added item to wishlist.",
+      alreadyWishlisted ? "info" : "success"
+    );
+    setWishlist((prevWishlist) =>
+      alreadyWishlisted
+        ? prevWishlist.filter((id) => id !== productId)
+        : [...prevWishlist, productId]
+    );
   };
 
   const login = async (email: string, password: string) => {

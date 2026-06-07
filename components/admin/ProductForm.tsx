@@ -7,6 +7,7 @@ import { adminProductService } from "@/services/adminProductService";
 import { mergeGeneratedVariants, syncVariantOptionsFromSkus, normalizeVariantPricing, normalizeProductBasePricing, getRegularPrice, getOfferPrice, buildSimpleProductVariant, isVariantProduct } from "@/lib/product-utils";
 import { DEFAULT_SHIPPING_CHARGE_LKR } from "@/lib/shipping";
 import VariantPricingMatrix from "@/components/admin/VariantPricingMatrix";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { flattenCategoryTree } from "@/lib/category-utils";
 import type { CategoryTreeNode } from "@/types/category";
 
@@ -357,11 +358,9 @@ export default function ProductForm({ initial, mode }: ProductFormProps) {
           </div>
           <div className="col-12">
             <label className="form-label text-muted fw-semibold small">Description</label>
-            <textarea
-              className="form-control"
-              rows={3}
+            <RichTextEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={setDescription}
               placeholder="Premium silicone back cover with precise cutouts..."
             />
           </div>

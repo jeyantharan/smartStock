@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/utils/format";
 import { useToast } from "@/hooks/useToast";
 import CategoryLabel from "@/components/CategoryLabel";
+import { resolveVariant } from "@/lib/product-utils";
+import type { CartItem } from "@/context/AppContext";
 
 export default function CartPage() {
   const {
@@ -27,6 +29,19 @@ export default function CartPage() {
   const { toastSuccess } = useToast();
   const [promoCode, setPromoCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(0); // in percent
+
+  const getItemMaxStock = (item: CartItem) => {
+    const variants = item.product.variants ?? [];
+    if (item.variantId) {
+      const byId = variants.find((v) => v.id === item.variantId);
+      if (byId) return byId.stock;
+    }
+    if (item.selectedOptions && Object.keys(item.selectedOptions).length > 0) {
+      const byOptions = resolveVariant(variants, item.selectedOptions);
+      if (byOptions) return byOptions.stock;
+    }
+    return item.product.stockCount;
+  };
 
   const handleApplyPromo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +99,7 @@ export default function CartPage() {
                             <img
                               src={item.product.image}
                               alt={item.product.name}
-                              className="w-100 h-100 object-fit-cover"
+                              className="w-100 h-100 object-fit-contain p-1"
                             />
                           </div>
                         </Link>
@@ -126,7 +141,8 @@ export default function CartPage() {
                                 item.product.id,
                                 item.quantity - 1,
                                 item.selectedColor,
-                                item.selectedSize
+                                item.selectedSize,
+                                item.selectedOptions
                               )
                             }
                             disabled={item.quantity <= 1}
@@ -144,10 +160,11 @@ export default function CartPage() {
                                 item.product.id,
                                 item.quantity + 1,
                                 item.selectedColor,
-                                item.selectedSize
+                                item.selectedSize,
+                                item.selectedOptions
                               )
                             }
-                            disabled={item.quantity >= item.product.stockCount}
+                            disabled={item.quantity >= getItemMaxStock(item)}
                             style={{ width: "24px", height: "24px" }}
                           >
                             <i className="bi bi-plus"></i>
@@ -163,7 +180,7 @@ export default function CartPage() {
                         <button
                           className="btn btn-outline-danger btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center border-0 text-muted hover-danger"
                           style={{ width: "32px", height: "32px" }}
-                          onClick={() => removeFromCart(item.product.id, item.selectedColor, item.selectedSize)}
+                          onClick={() => removeFromCart(item.product.id, item.selectedColor, item.selectedSize, item.selectedOptions)}
                           title="Remove item"
                         >
                           <i className="bi bi-trash"></i>

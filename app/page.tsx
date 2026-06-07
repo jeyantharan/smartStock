@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import CategoryCard from "@/components/CategoryCard";
+import Logo from "@/components/Logo";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { getTopLevelCategories } from "@/lib/category-utils";
@@ -14,9 +15,11 @@ import { useToast } from "@/hooks/useToast";
 export default function HomePage() {
   const [email, setEmail] = useState("");
   const { toastSuccess, toastWarning } = useToast();
-  const { products } = useProducts();
+  const { products, loading: productsLoading } = useProducts();
   const { tree: categoryTree, loading: categoriesLoading } = useCategories();
   const topCategories = getTopLevelCategories(categoryTree);
+
+  const pageLoading = productsLoading || categoriesLoading;
 
   const featuredProducts = products.filter((p) => p.isFeatured).slice(0, 4);
   const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
@@ -35,6 +38,37 @@ export default function HomePage() {
     toastSuccess("Thank you for subscribing! Check your inbox for your 15% discount code.");
     setEmail("");
   };
+
+  if (pageLoading) {
+    return (
+      <div className="home-loader d-flex flex-column align-items-center justify-content-center min-vh-100 bg-white">
+        <div className="home-loader-pulse mb-4">
+          <Logo size="xl" href={null} priority />
+        </div>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="text-muted mt-3 mb-0 fw-semibold">Loading your experience…</p>
+
+        <style jsx>{`
+          .home-loader-pulse {
+            animation: home-loader-pulse 1.4s ease-in-out infinite;
+          }
+          @keyframes home-loader-pulse {
+            0%,
+            100% {
+              transform: scale(1);
+              opacity: 0.85;
+            }
+            50% {
+              transform: scale(1.06);
+              opacity: 1;
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="d-flex flex-column min-h-screen bg-white">

@@ -19,7 +19,6 @@ import {
   resolveVariant,
   resolveDisplayImage,
   resolveDisplayPrice,
-  isOptionValueAvailable,
   variantDisplayPrices,
   resolveSelectionsAfterChange,
 } from "@/lib/product-utils";
@@ -72,9 +71,12 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
       ? Math.round(((displayOriginal - displayPrice) / displayOriginal) * 100)
       : 0;
 
+  const hasVariants = sortedOptions.length > 0;
+  const allOptionsSelected = hasVariants && sortedOptions.every((o) => selectedOptions[o.name]);
+
   const maxStock = selectedVariant?.stock ?? product?.stockCount ?? 0;
-  const canPurchase = selectedVariant
-    ? selectedVariant.isActive && selectedVariant.stock > 0
+  const canPurchase = hasVariants
+    ? !!selectedVariant && selectedVariant.isActive && selectedVariant.stock > 0
     : product?.inStock ?? false;
 
   const galleryImages = useMemo(() => {
@@ -89,21 +91,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     if (product) {
       setQuantity(1);
-      const defaults: Record<string, string> = {};
-      sortedOptions.forEach((group) => {
-        const firstAvailable = group.values.find((val) =>
-          isOptionValueAvailable(
-            product.variants ?? [],
-            sortedOptions,
-            group.name,
-            val,
-            defaults
-          )
-        );
-        if (firstAvailable) defaults[group.name] = firstAvailable;
-      });
-      setSelectedOptions(defaults);
-      setActiveImage(resolveDisplayImage(product, defaults));
+      setSelectedOptions({});
+      setActiveImage(resolveDisplayImage(product, {}));
     }
   }, [product?.id]);
 
@@ -152,12 +141,51 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     setQuantity(1);
   };
 
+  const handleGallerySelect = (url: string) => {
+    setActiveImage(url);
+
+    const variants = product.variants ?? [];
+    const matching = variants.filter((v) => v.isActive && v.image === url);
+    if (matching.length === 0) return;
+
+    // Option values shared by every variant that uses this image define the
+    // selection it represents (e.g. a color); apply them so price/stock update.
+    let next = selectedOptions;
+    let changed = false;
+    for (const group of sortedOptions) {
+      const values = new Set(matching.map((v) => v.options[group.name]));
+      if (values.size === 1) {
+        const value = matching[0].options[group.name];
+        if (value && next[group.name] !== value) {
+          next = resolveSelectionsAfterChange(
+            variants,
+            sortedOptions,
+            group.name,
+            value,
+            next
+          );
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      setSelectedOptions(next);
+      setQuantity(1);
+    }
+  };
+
   const handleAddToCart = () => {
     if (!canPurchase) return;
     const legacyColor = selectedOptions[sortedOptions[0]?.name ?? ""];
     const legacySize = selectedOptions[sortedOptions[1]?.name ?? ""];
     addToCart(
-      { ...product, price: displayPrice, originalPrice: displayOriginal },
+      {
+        ...product,
+        price: displayPrice,
+        originalPrice: displayOriginal,
+        image: selectedVariant?.image ?? activeImage ?? product.image,
+      },
       quantity,
       legacyColor,
       legacySize,
@@ -213,7 +241,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 images={galleryImages}
                 activeImage={activeImage}
                 productName={product.name}
-                onSelect={setActiveImage}
+                onSelect={handleGallerySelect}
               />
             </div>
 
@@ -251,10 +279,6 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   Shipping: {formatCurrency(getProductShippingCharge(product.shippingCharge))}
                 </p>
 
-                {product.description && (
-                  <p className="product-description">{product.description}</p>
-                )}
-
                 {sortedOptions.length > 0 && (
                   <VariantOptionPicker
                     groups={sortedOptions}
@@ -262,6 +286,20 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                     selectedOptions={selectedOptions}
                     onSelect={handleOptionSelect}
                   />
+                )}
+
+                {hasVariants && !allOptionsSelected && (
+                  <div className="alert alert-warning d-flex align-items-center gap-2 py-2 px-3 mb-3" role="alert">
+                    <i className="bi bi-info-circle"></i>
+                    <span className="small mb-0">
+                      Please select{" "}
+                      {sortedOptions
+                        .filter((o) => !selectedOptions[o.name])
+                        .map((o) => o.name)
+                        .join(" & ")}{" "}
+                      to continue.
+                    </span>
+                  </div>
                 )}
 
                 <div className="product-actions">
@@ -318,6 +356,18 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
         </div>
+
+        {product.description && (
+          <div className="product-specs-card p-4 p-lg-5 mb-5">
+            <h2 className="fw-bold mb-4" style={{ fontSize: "1.35rem" }}>
+              Description
+            </h2>
+            <div
+              className="product-description mb-0"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+          </div>
+        )}
 
         {Object.keys(product.specifications).length > 0 && (
           <div className="product-specs-card p-4 p-lg-5 mb-5">

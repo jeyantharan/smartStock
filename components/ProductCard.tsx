@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import { Product } from "@/context/AppContext";
-import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCategoryLabel } from "@/hooks/useCategories";
 import { formatCurrency } from "@/utils/format";
@@ -13,7 +12,6 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
 
   const isFav = isWishlisted(product.id);
@@ -105,15 +103,14 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
 
-          <button
-            onClick={() => addToCart(product, 1)}
-            disabled={!product.inStock}
+          <Link
+            href={`/products/${product.id}`}
             className="btn btn-outline-primary btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center hover-bounce"
             style={{ width: "38px", height: "38px" }}
-            title="Add to Cart"
+            title="View Details"
           >
-            <i className="bi bi-bag-plus fs-5"></i>
-          </button>
+            <i className="bi bi-eye fs-5"></i>
+          </Link>
         </div>
       </div>
 
